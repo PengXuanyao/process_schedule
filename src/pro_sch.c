@@ -122,3 +122,41 @@ P_Queue** create_process(void){
 	return p_queue;
 }
 
+int is_waiting_queue_not_null(P_Queue** p_queue){
+	int flag = 0;
+   	for (int i = 0; i < MAX_PRIOR; i++){
+		if (!is_empty_q(p_queue[i]))
+				flag = 1;
+	}
+	return flag;
+}
+
+void run_schedule(P_Queue** p_queue){
+	while(is_waiting_queue_not_null(p_queue)){
+		// print queue
+		for (int i = 0; i < MAX_PRIOR; i++)
+			print_q(p_queue[i]);
+		// choose process
+		int ch_pr = 0;
+		for (int i = 0; i < MAX_PRIOR; i++){
+			if(!is_empty_q(p_queue[i])){
+				ch_pr = i;
+			}
+		}
+		// run process
+		// dequeue process
+		PCB tmp = de_p_queue(p_queue[ch_pr]);
+		// change status
+		tmp.use_time++;
+		if (tmp.use_time == tmp.run_time)
+			tmp.status = F;
+		else {
+			tmp.status = R;
+			if (tmp.prior < 4){
+				tmp.prior++;
+			}
+			// enqueue
+			add_p_queue(p_queue[tmp.prior], tmp);
+		}
+	}		
+}

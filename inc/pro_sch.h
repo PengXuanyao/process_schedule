@@ -43,4 +43,5 @@ PCB de_p_queue(P_Queue* q);
 void print_q(P_Queue* q);
 void test_q(void);
 P_Queue** create_process(void);
+void run_schedule(P_Queue** p_queue);
 
