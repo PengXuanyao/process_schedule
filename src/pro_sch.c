@@ -57,12 +57,17 @@ PCB de_p_queue(P_Queue* q){
 
 void print_q(P_Queue* q){
 	if (is_empty_q(q)){
-		printf("print failed, null queue");
+		printf("print failed, null queue\n");
+		return ;
 	}
 	printf("print queue:\n");
 	P_Node* node= q->front;
 	while (node != NULL){
-		printf("%c ", node->p.name);
+		printf("name: %c\n", node->p.name);
+		printf("priority: %d\n", node->p.prior);
+		printf("start time: %d\n ", node->p.start_time);
+		printf("run time: %d\n ", node->p.run_time);
+		printf("use time: %d\n ", node->p.use_time);
 		node = node->np;
 	}
 	printf("\n");
@@ -87,4 +92,33 @@ void test_q(void){
 	print_q(q);
 }
 
+P_Queue** create_process(void){
+	int num = 0;
+	static P_Queue* p_queue[MAX_PRIOR];
+	for ( int i = 0; i < MAX_PRIOR; i++){
+		p_queue[i] = create_p_queue(i);
+	} 
+	printf("how many process do you want to create: ");
+	scanf("%d", &num);
+	if (num == 0){
+		printf("no prcess is created, bye!\n");
+	}
+	while(num--){ // attention bug. while or do while
+		static int i = 0;
+		PCB tmp;
+		printf("please input process, last %d\n", num);
+		tmp.name = 'A' + i;
+		tmp.status = W;
+		printf("priority (make sure less than %d):", MAX_PRIOR);
+		scanf("%d", &tmp.prior);
+		printf("start time: ");
+		scanf("%d", &tmp.start_time);
+		printf("run time: ");
+		scanf("%d", &tmp.run_time);
+		tmp.use_time=0;
+		add_p_queue(p_queue[tmp.prior], tmp);
+		i++;
+	}
+	return p_queue;
+}
 

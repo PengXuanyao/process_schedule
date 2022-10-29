@@ -2,6 +2,9 @@
 #include "pro_sch.h"
 
 int main(){
-	test_q();
+	P_Queue** p_queue;
+	p_queue = create_process();
+	for (int i = 0; i < MAX_PRIOR; i++)
+		print_q(p_queue[i]);
 	return 0;
 }
