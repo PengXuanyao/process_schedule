@@ -55,12 +55,12 @@ PCB de_p_queue(P_Queue* q){
 	return item;
 }
 
-void print_q(P_Queue* q){
+void print_q(P_Queue* q, int i){
 	if (is_empty_q(q)){
-		printf("print failed, null queue\n");
+		printf("queue %d is null queue.\n\n", i);
 		return ;
 	}
-	printf("print queue:\n");
+	printf("queue %d:\n", i);
 	P_Node* node= q->front;
 	while (node != NULL){
 		printf("name: %c\n", node->p.name);
@@ -83,40 +83,46 @@ void test_q(void){
 	temp.name = 'C';
 	add_p_queue(q, temp);
 	
-	print_q(q);
-	
 	de_p_queue(q);
 	temp.name = 'D';
 	add_p_queue(q, temp);
-	
-	print_q(q);
 }
 
 P_Queue** create_process(void){
 	int num = 0;
 	static P_Queue* p_queue[MAX_PRIOR];
-	for ( int i = 0; i < MAX_PRIOR; i++){
+	// the last queue is the input queue
+	for ( int i = 0; i < MAX_PRIOR + 1; i++){
 		p_queue[i] = create_p_queue(i);
 	} 
 	printf("how many process do you want to create: ");
 	scanf("%d", &num);
 	if (num == 0){
 		printf("no prcess is created, bye!\n");
+		return NULL;
 	}
-	while(num--){ // attention bug. while or do while
-		static int i = 0;
+	int i = 0;
+	int last_start_time = 0;
+	while(num--){ 
 		PCB tmp;
 		printf("please input process, last %d\n", num);
 		tmp.name = 'A' + i;
 		tmp.status = W;
 		printf("priority (make sure less than %d):", MAX_PRIOR);
 		scanf("%d", &tmp.prior);
-		printf("start time: ");
+		printf("start time:");
 		scanf("%d", &tmp.start_time);
+		while (tmp.start_time < last_start_time){
+			printf("please input the process info by chronological order\n");
+			printf("start time:");
+			scanf("%d", &tmp.start_time);
+		}
+		last_start_time = tmp.start_time;
 		printf("run time: ");
 		scanf("%d", &tmp.run_time);
 		tmp.use_time=0;
-		add_p_queue(p_queue[tmp.prior], tmp);
+		// last p_queue is the input queue, so enqueue to it.
+		add_p_queue(p_queue[MAX_PRIOR], tmp);
 		i++;
 	}
 	return p_queue;
@@ -124,7 +130,7 @@ P_Queue** create_process(void){
 
 int is_waiting_queue_not_null(P_Queue** p_queue){
 	int flag = 0;
-   	for (int i = 0; i < MAX_PRIOR; i++){
+   	for (int i = 0; i < MAX_PRIOR + 1; i++){
 		if (!is_empty_q(p_queue[i]))
 				flag = 1;
 	}
@@ -132,24 +138,44 @@ int is_waiting_queue_not_null(P_Queue** p_queue){
 }
 
 void run_schedule(P_Queue** p_queue){
+	int time = 0;
 	while(is_waiting_queue_not_null(p_queue)){
-		// print queue
-		for (int i = 0; i < MAX_PRIOR; i++)
-			print_q(p_queue[i]);
+		printf("----------time = %d----------\n", time);
+		// schedule from input queue
+		if (!is_empty_q(p_queue[MAX_PRIOR])){
+			while (p_queue[MAX_PRIOR]->front->p.start_time == time){
+				PCB p;
+				p = de_p_queue(p_queue[MAX_PRIOR]);
+				add_p_queue(p_queue[p.prior], p);			
+				if (is_empty_q(p_queue[MAX_PRIOR]))
+					break;
+			}	
+		}
 		// choose process
-		int ch_pr = 0;
+		int ch_pr = -1;
 		for (int i = 0; i < MAX_PRIOR; i++){
 			if(!is_empty_q(p_queue[i])){
 				ch_pr = i;
+				break;
 			}
+		}
+		if (ch_pr == -1){
+			// print queue
+			for (int i = 0; i < MAX_PRIOR + 1; i++)
+				print_q(p_queue[i], i);
+			printf("-----------------------------\n");
+			time++;
+			continue;
 		}
 		// run process
 		// dequeue process
 		PCB tmp = de_p_queue(p_queue[ch_pr]);
 		// change status
 		tmp.use_time++;
-		if (tmp.use_time == tmp.run_time)
+		if (tmp.use_time == tmp.run_time){
 			tmp.status = F;
+			printf("process %c finish!\n\n", tmp.name);
+		}
 		else {
 			tmp.status = R;
 			if (tmp.prior < 4){
@@ -158,5 +184,10 @@ void run_schedule(P_Queue** p_queue){
 			// enqueue
 			add_p_queue(p_queue[tmp.prior], tmp);
 		}
+		// print queue
+		for (int i = 0; i < MAX_PRIOR + 1; i++)
+			print_q(p_queue[i], i);
+		printf("-----------------------------\n");
+		time++;
 	}		
 }
